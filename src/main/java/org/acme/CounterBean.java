@@ -20,7 +20,7 @@ public class CounterBean {
     }
 
     @Scheduled(every="10s")
-    @SchedulerLock
+    @SchedulerLock(name = "increment")
     void increment() {
         LockAssert.assertLocked();
         counter.incrementAndGet();

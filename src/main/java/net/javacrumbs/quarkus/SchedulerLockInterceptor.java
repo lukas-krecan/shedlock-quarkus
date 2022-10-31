@@ -13,7 +13,7 @@ import javax.interceptor.InvocationContext;
 import java.time.Duration;
 import java.util.Optional;
 
-@SchedulerLock
+@SchedulerLock(name = "?")
 @Priority(3001)
 @Interceptor
 public class SchedulerLockInterceptor {
@@ -23,7 +23,7 @@ public class SchedulerLockInterceptor {
     @Inject
     public SchedulerLockInterceptor(LockProvider lockProvider) {
         lockingTaskExecutor = new DefaultLockingTaskExecutor(lockProvider);
-        lockConfigurationExtractor = new QuarkusLockConfigurationExtractor(Duration.ofSeconds(10), Duration.ofSeconds(10), null);
+        lockConfigurationExtractor = new QuarkusLockConfigurationExtractor(Duration.ofSeconds(10), Duration.ofSeconds(10));
     }
 
     @AroundInvoke

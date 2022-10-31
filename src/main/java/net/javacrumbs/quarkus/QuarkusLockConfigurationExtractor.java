@@ -15,10 +15,7 @@
  */
 package net.javacrumbs.quarkus;
 
-import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.core.convert.ConversionService;
-import io.micronaut.core.util.StringUtils;
-import io.micronaut.inject.ExecutableMethod;
+
 import net.javacrumbs.shedlock.core.ClockProvider;
 import net.javacrumbs.shedlock.core.LockConfiguration;
 
@@ -31,21 +28,19 @@ import static java.util.Objects.requireNonNull;
 class QuarkusLockConfigurationExtractor {
     private final Duration defaultLockAtMostFor;
     private final Duration defaultLockAtLeastFor;
-    private final ConversionService<?> conversionService;
 
-    QuarkusLockConfigurationExtractor(Duration defaultLockAtMostFor, Duration defaultLockAtLeastFor, ConversionService<?> conversionService) {
+    QuarkusLockConfigurationExtractor(Duration defaultLockAtMostFor, Duration defaultLockAtLeastFor) {
         this.defaultLockAtMostFor = requireNonNull(defaultLockAtMostFor);
         this.defaultLockAtLeastFor = requireNonNull(defaultLockAtLeastFor);
-        this.conversionService = conversionService;
     }
 
 
     Optional<LockConfiguration> getLockConfiguration(Method method) {
-        Optional<AnnotationValue<SchedulerLock>> annotation = findAnnotation(method);
+        Optional<SchedulerLock> annotation = findAnnotation(method);
         return annotation.map(this::getLockConfiguration);
     }
 
-    private LockConfiguration getLockConfiguration(AnnotationValue<SchedulerLock> annotation) {
+    private LockConfiguration getLockConfiguration(SchedulerLock annotation) {
         return new LockConfiguration(
             ClockProvider.now(),
             getName(annotation),
@@ -54,38 +49,49 @@ class QuarkusLockConfigurationExtractor {
         );
     }
 
-    private String getName(AnnotationValue<SchedulerLock> annotation) {
-        return annotation.getRequiredValue("name", String.class);
+    private String getName(SchedulerLock annotation) {
+        return annotation.name();
     }
 
-    Duration getLockAtMostFor(AnnotationValue<SchedulerLock> annotation) {
+    Duration getLockAtMostFor(SchedulerLock annotation) {
         return getValue(
-            annotation,
+            annotation.lockAtLeastFor(),
             this.defaultLockAtMostFor,
             "lockAtMostFor"
         );
     }
 
-    Duration getLockAtLeastFor(AnnotationValue<SchedulerLock> annotation) {
+    Duration getLockAtLeastFor(SchedulerLock annotation) {
         return getValue(
-            annotation,
+            annotation.lockAtLeastFor(),
             this.defaultLockAtLeastFor,
             "lockAtLeastFor"
         );
     }
 
-    private Duration getValue(AnnotationValue<SchedulerLock> annotation, Duration defaultValue, String paramName) {
-        String stringValueFromAnnotation = annotation.get(paramName, String.class).orElse("");
-        if (StringUtils.hasText(stringValueFromAnnotation)) {
-            return conversionService.convert(stringValueFromAnnotation, Duration.class)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid " + paramName + " value \"" + stringValueFromAnnotation + "\" - cannot parse into duration"));
+    private Duration getValue(String stringValueFromAnnotation, Duration defaultValue, String paramName) {
+        if (!stringValueFromAnnotation.isEmpty()) {
+            return parseDuration(stringValueFromAnnotation, paramName);
         } else {
             return defaultValue;
         }
     }
 
-    Optional<AnnotationValue<SchedulerLock>> findAnnotation(ExecutableMethod<Object, Object> method) {
-        return method.findAnnotation(SchedulerLock.class);
+    Optional<SchedulerLock> findAnnotation(Method method) {
+        return Optional.ofNullable(method.getAnnotation(SchedulerLock.class));
+    }
+
+    private static Duration parseDuration(String value, String memberName) {
+        if (Character.isDigit(value.charAt(0))) {
+            value = "PT" + value;
+        }
+
+        try {
+            return Duration.parse(value);
+        } catch (Exception e) {
+            // This could only happen for config-based expressions
+            throw new IllegalStateException("Invalid " + memberName + "() expression", e);
+        }
     }
 }
 
