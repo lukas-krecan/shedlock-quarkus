@@ -23,12 +23,14 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Optional;
 
+import static io.quarkus.runtime.configuration.DurationConverter.parseDuration;
 import static java.util.Objects.requireNonNull;
 
 class QuarkusLockConfigurationExtractor {
     private final Duration defaultLockAtMostFor;
     private final Duration defaultLockAtLeastFor;
 
+    //         SchedulerUtils.lookUpPropertyValue()
     QuarkusLockConfigurationExtractor(Duration defaultLockAtMostFor, Duration defaultLockAtLeastFor) {
         this.defaultLockAtMostFor = requireNonNull(defaultLockAtMostFor);
         this.defaultLockAtLeastFor = requireNonNull(defaultLockAtLeastFor);
@@ -71,7 +73,7 @@ class QuarkusLockConfigurationExtractor {
 
     private Duration getValue(String stringValueFromAnnotation, Duration defaultValue, String paramName) {
         if (!stringValueFromAnnotation.isEmpty()) {
-            return parseDuration(stringValueFromAnnotation, paramName);
+            return parseDuration(stringValueFromAnnotation);
         } else {
             return defaultValue;
         }
@@ -79,19 +81,6 @@ class QuarkusLockConfigurationExtractor {
 
     Optional<SchedulerLock> findAnnotation(Method method) {
         return Optional.ofNullable(method.getAnnotation(SchedulerLock.class));
-    }
-
-    private static Duration parseDuration(String value, String memberName) {
-        if (Character.isDigit(value.charAt(0))) {
-            value = "PT" + value;
-        }
-
-        try {
-            return Duration.parse(value);
-        } catch (Exception e) {
-            // This could only happen for config-based expressions
-            throw new IllegalStateException("Invalid " + memberName + "() expression", e);
-        }
     }
 }
 
