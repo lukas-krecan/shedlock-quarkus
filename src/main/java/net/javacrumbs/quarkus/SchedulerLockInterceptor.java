@@ -4,34 +4,23 @@ import net.javacrumbs.shedlock.core.DefaultLockingTaskExecutor;
 import net.javacrumbs.shedlock.core.LockConfiguration;
 import net.javacrumbs.shedlock.core.LockProvider;
 import net.javacrumbs.shedlock.core.LockingTaskExecutor;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.annotation.Priority;
-import javax.inject.Inject;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.Interceptor;
 import javax.interceptor.InvocationContext;
 import java.util.Optional;
 
-import static io.quarkus.runtime.configuration.DurationConverter.parseDuration;
-
 @SchedulerLock(name = "?")
 @Priority(3001)
 @Interceptor
 public class SchedulerLockInterceptor {
-    private final DefaultLockingTaskExecutor lockingTaskExecutor;
+    private final LockingTaskExecutor lockingTaskExecutor;
     private final QuarkusLockConfigurationExtractor lockConfigurationExtractor;
 
-    @ConfigProperty(name = "shedlock.defaults.lock-at-most-for")
-    String defaultLockAtMostForString;
-
-    @ConfigProperty(name = "shedlock.defaults.lock-at-least-for")
-    String defaultLockAtLeastForString;
-
-    @Inject
-    public SchedulerLockInterceptor(LockProvider lockProvider) {
-        lockingTaskExecutor = new DefaultLockingTaskExecutor(lockProvider);
-        lockConfigurationExtractor = new QuarkusLockConfigurationExtractor(parseDuration(defaultLockAtMostForString), parseDuration(defaultLockAtLeastForString));
+    public SchedulerLockInterceptor(LockProvider lockProvider, QuarkusLockConfigurationExtractor lockConfigurationExtractor) {
+        this.lockingTaskExecutor = new DefaultLockingTaskExecutor(lockProvider);
+        this.lockConfigurationExtractor = lockConfigurationExtractor; // use ConfigProvider.getConfig()
     }
 
     @AroundInvoke

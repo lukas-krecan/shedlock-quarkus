@@ -1,5 +1,6 @@
 package net.javacrumbs.quarkus;
 
+import javax.enterprise.util.Nonbinding;
 import javax.interceptor.InterceptorBinding;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -16,7 +17,7 @@ public @interface SchedulerLock {
     /**
      * Lock name.
      */
-    String name();
+    @Nonbinding String name();
 
     /**
      * How long the lock should be kept in case the machine which obtained the lock died before releasing it.
@@ -24,7 +25,7 @@ public @interface SchedulerLock {
      * supported by <a href="https://docs.micronaut.io/latest/guide/config.html#_duration_conversion">Duration Conversion</a>
      * <p>
      */
-    String lockAtMostFor() default "";
+    @Nonbinding String lockAtMostFor() default "";
 
     /**
      * The lock will be held at least for this period of time. Can be used if you really need to execute the task
@@ -33,6 +34,6 @@ public @interface SchedulerLock {
      * lock will be kept at least for given period of time. Can be any format
      * supported by <a href="https://docs.micronaut.io/latest/guide/config.html#_duration_conversion">Duration Conversion</a>
      */
-    String lockAtLeastFor() default "";
+    @Nonbinding String lockAtLeastFor() default "";
 }
 
