@@ -23,14 +23,13 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Optional;
 
-import static io.quarkus.runtime.configuration.DurationConverter.parseDuration;
 import static java.util.Objects.requireNonNull;
+import static net.javacrumbs.quarkus.Utils.parseDuration;
 
 class QuarkusLockConfigurationExtractor {
     private final Duration defaultLockAtMostFor;
     private final Duration defaultLockAtLeastFor;
 
-    //         SchedulerUtils.lookUpPropertyValue()
     QuarkusLockConfigurationExtractor(Duration defaultLockAtMostFor, Duration defaultLockAtLeastFor) {
         this.defaultLockAtMostFor = requireNonNull(defaultLockAtMostFor);
         this.defaultLockAtLeastFor = requireNonNull(defaultLockAtLeastFor);

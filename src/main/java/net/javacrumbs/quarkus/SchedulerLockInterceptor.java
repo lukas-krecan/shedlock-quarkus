@@ -13,7 +13,8 @@ import javax.interceptor.InvocationContext;
 import java.time.Duration;
 import java.util.Optional;
 
-import static io.quarkus.runtime.configuration.DurationConverter.parseDuration;
+import static net.javacrumbs.quarkus.Utils.parseDuration;
+
 
 @SchedulerLock(name = "?")
 @Priority(3001)
